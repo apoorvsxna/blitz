@@ -1,0 +1,1 @@
+Bencode is a data serialization format similar to JSON or XML, mostly used only in torrent files.
