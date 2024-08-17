@@ -1,0 +1,6 @@
+In order to get a list of peers from the tracker, the tracker will be expecting messages to follow a specific protocol. In short you must:
+
+- Send a connect request
+- Get the connect response and extract the connection id
+- Use the connection id to send an announce request - this is where we tell the tracker which files we’re interested in
+- Get the announce response and extract the peers list

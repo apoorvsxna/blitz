@@ -1,0 +1,5 @@
+Trackers use UDP because it's faster than HTTP. HTTP uses TCP, which will be used here for downloading files.
+
+TCP ensures data arrives complete and in order but is slower because it needs to set up a connection first. UDP is faster because it sends data without connecting, but there's a chance data might get lost.
+
+For trackers (small messages), UDP is best. For downloading files (which need to be accurate), TCP is better.
