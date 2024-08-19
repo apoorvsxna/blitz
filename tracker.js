@@ -2,6 +2,7 @@
 import * as dgram from 'dgram';
 import { Buffer } from 'buffer';
 import { parse as urlParse} from 'url';
+import * as crypto from 'crypto';
 
 export const getPeers = (torrent, callback) => {
     const socket = dgram.createSocket('udp4');
@@ -40,12 +41,27 @@ function respType(resp) {
 
 // build connect request
 function buildConnReq() {
+    const buf = Buffer.alloc(16);
 
+    // connection id, should always be 0x41727101980
+    // done in two 4-byte chunks because there is no method to write 64-bit integers in node.js
+    buf.writeUInt32BE(0x417, 0); // arguments - value, offset
+    buf.writeUInt32BE(0x27101980, 4);
+
+    buf.writeUInt32BE(0, 8);
+
+    crypto.randomBytes(4).copy(buf, 12);
+
+    return buf;
 }
 
 // parse connect response
 function parseConnResp(resp) {
-
+    return {
+        action: resp.readUInt32BE(0),
+        transactionId: resp.readUInt32BE(4),
+        connectionId: resp.slice(8)
+    }
 }
 
 // build announce request
