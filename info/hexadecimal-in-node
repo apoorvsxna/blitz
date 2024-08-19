@@ -1,0 +1,1 @@
+Node.js doesn't support 64-bit integers directly, so we split them into two 32-bit hexadecimal numbers for writing. This allows us to represent a 64-bit value even though Node.js lacks native support for that size.
