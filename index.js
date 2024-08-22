@@ -1,38 +1,40 @@
-import parseTorrent from 'parse-torrent';
-import fs from 'fs';
 import axios from 'axios';
+import { parseTorrentFile } from './torrent-parser.js';
+import { convertToEncodedFormat } from './url-encode.js';
+import { decodePeers } from './peers.js';
+import bencode from 'bencode';
 
-async function parseTorrentFile(torrentFilePath) {
-  const parsed = await parseTorrent(fs.readFileSync(torrentFilePath));
-  return parsed;
+// Configuration
+const TRACKER_URL = 'http://p4p.arenabg.com:1337/announce';
+const PEER_ID = '00112233445566778899';
+const PORT = 6881;
+
+// Helper function to build tracker URL
+function buildTrackerUrl({ infoHash, length }) {
+  const uploaded = 0;
+  const downloaded = 0;
+  const left = length;
+  const compact = 1;
+  
+  const encodedInfoHash = convertToEncodedFormat(infoHash);
+  return `${TRACKER_URL}?peer_id=${PEER_ID}&uploaded=${uploaded}&downloaded=${downloaded}&left=${left}&compact=${compact}&port=${PORT}&info_hash=${encodedInfoHash}`;
 }
 
-const content = parseTorrentFile('test.torrent');
+// Main function to fetch and decode peers
+async function fetchPeers() {
+  try {
+    const content = await parseTorrentFile('test.torrent');
+    const url = buildTrackerUrl({ infoHash: content.infoHash, length: content.length });
 
-const peer_id = '00112233445566778899';
-const uploaded = 0;
-const downloaded = 0;
-const left = content.length; // total size
-const compact = 1; // use compact format
-const port = 6881; // reserved ports 6881-6889
-const info_hash = content.infoHash;
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    const decodedData = bencode.decode(Buffer.from(response.data));
+    const peers = decodePeers(decodedData.peers);
+    
+    console.log(peers);
+  } catch (error) {
+    console.error(`Got error: ${error.message}`);
+  }
+}
 
-const url = 'http://p4p.arenabg.com:1337/announce';
-
-const params = {
-    peer_id: peer_id,
-    uploaded: uploaded,
-    downloaded: downloaded,
-    left: left,
-    compact: compact,
-    port: port,
-    info_hash: info_hash
-  };
-
-axios.get(url, { params })
-.then(response => {
-console.log(response.data);
-})
-.catch(error => {
-console.error(`Got error: ${error.message}`);
-});
+// Execute the main function
+fetchPeers();
